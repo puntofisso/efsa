@@ -28,6 +28,6 @@ Route::get('/example', function () {
 } );
 
 Route::get('/questions', function() {
-	$users = DB::select('select * from efsa.Questions');
+	$users = DB::select('select * from efsa.Questions limit 10');
 	return json_encode($users);
 });
