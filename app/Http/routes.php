@@ -20,6 +20,7 @@ Route::get('/example', function () {
 	$x = array();
 	$x[] = 'one';
 	$x[] = 'two';
+	$x[] = 'three';
 	return json_encode($x);
 
 } );
