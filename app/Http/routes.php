@@ -11,6 +11,7 @@
 |
 */
 
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -25,3 +26,8 @@ Route::get('/example', function () {
 	return json_encode($x);
 
 } );
+
+Route::get('/questions', function() {
+	$users = DB::select('select * from efsa.Questions');
+	return json_encode($users);
+});
