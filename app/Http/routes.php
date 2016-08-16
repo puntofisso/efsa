@@ -11,6 +11,7 @@
 |
 */
 
+use App\Favourites;
 
 Route::get('/', function () {
     return view('welcome');
@@ -68,7 +69,31 @@ Route::get('/unitpanel/panels', function() {
 });
 
 Route::get('/petitioners', function() {
-	$query=DB::select('SELECT PETITIONER, COUNT(PETITIONER) AS COUNT FROM Questions GROUP BY PETITIONER ORDER BY PETITIONER');
-		return json_encode($query);
-
+	$query=DB::select('SELECT PETITIONER, COUNT(PETITIONER) AS COUNT FROM `Questions` GROUP BY PETITIONER ORDER BY COUNT DESC');
+	return json_encode($query);
 });
+
+// Favouriting & Unfavouriting
+Route::get('/fav/{type}/{id}', ['middleware' => 'auth', function ($type, $id)  {
+
+    $user = Auth::user();
+    $user_id=$user->id;
+
+	$fav = App\Favourites::firstOrNew(array('fav_identifier' => $id, 'user_id' => $user_id));
+	$fav->user_id = $user_id;
+    $fav->type = $type;
+    $fav->fav_identifier = $id;
+	$fav->save();
+}]);
+
+Route::get('/unfav/{type}/{id}', ['middleware' => 'auth', function ($type, $id)  {
+    $user = Auth::user();
+    $user_id=$user->id;
+
+    $deletedRows = App\Favourites::where('fav_identifier', $id)
+    							->where('user_id', $user_id)
+    							->delete();
+}]);
+
+Route::auth();
+Route::get('/home', 'HomeController@index');
