@@ -12,7 +12,7 @@ class FavouritesAddDateColumn extends Migration
      */
     public function up()
     {
-        Schema::table('Favourites', function ($table) {
+        Schema::table('favourites', function ($table) {
             $table->datetime('lastupdate');
         });
     }
@@ -24,7 +24,7 @@ class FavouritesAddDateColumn extends Migration
      */
     public function down()
     {
-        Schema::table('Favourites', function ($table) {
+        Schema::table('favourites', function ($table) {
             $table->dropColumn('lastupdate');
         });
     }
