@@ -13,8 +13,16 @@ class CreateQuestionsMetasTable extends Migration
     public function up()
     {
         Schema::create('questions_metas', function (Blueprint $table) {
-            $table->increments('id');
+
+            $table->string('question_id',17);
+            $table->string('tag');
+            $table->integer('score')->unsigned();
+            $table->primary(['question_id','tag']);
+            
             $table->timestamps();
+
+
+
         });
     }
 
