@@ -40,6 +40,13 @@ Route::get('/questions/get/{id}/status', function ($id) {
 	return json_encode($out);
 });
 
+Route::get('/questions/get/{id}/tags', function ($id) {
+
+    $question = DB::select('select tag, score from questions_metas where question_id = :id', ['id' => $id]);
+   
+	return json_encode($question);
+});
+
 Route::get('/questions/get/{id}/lastupdate', function ($id) {
 
     $question = DB::select('select LASTUPDATED from efsa.Questions where efsa.Questions.QUESTIONNUMBER = :id', ['id' => $id]);
@@ -78,8 +85,20 @@ Route::get('/unitpanel/panels', function() {
 });
 
 // Petitioners (i.e. companies)
-Route::get('/petitioners', function() {
+Route::get('/petitioners/list', function() {
 	$query=DB::select('SELECT PETITIONER, COUNT(PETITIONER) AS COUNT FROM `Questions` GROUP BY PETITIONER ORDER BY COUNT DESC');
+	return json_encode($query);
+});
+
+Route::get('/petitioners/get/{name}', function($name) {
+	$nameDecoded = urldecode($name);
+	$query=DB::select('SELECT * from Questions WHERE PETITIONER = :petitioner', ['petitioner' => $nameDecoded]);
+	return json_encode($query);
+});
+
+Route::get('/petitioners/timeline/{name}', function($name) {
+	$nameDecoded = urldecode($name);
+	$query=DB::select('SELECT QUESTIONNUMBER, RECEPTIONDATE from Questions WHERE PETITIONER = :petitioner ORDER BY RECEPTIONDATE ASC', ['petitioner' => $nameDecoded]);
 	return json_encode($query);
 });
 
