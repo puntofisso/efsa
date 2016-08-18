@@ -1,19 +1,8 @@
 <?php
-
-/*
-|--------------------------------------------------------------------------
-| Application Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register all of the routes for an application.
-| It's a breeze. Simply tell Laravel the URIs it should respond to
-| and give it the controller to call when that URI is requested.
-|
-*/
-
 use App\Favourites;
 use App\Logs;
 
+// Base
 Route::get('/', function () {
     return view('welcome');
 });
@@ -229,7 +218,7 @@ Route::get('/favourite/list/full', ['middleware' => 'auth', function ()  {
     	 return json_encode($notif);
 }]);
 
-// Chatbot interaction
+// Chatbot interaction & Logs management
 Route::get('/chat/{convo_id}/{text}', function ($convo_id, $text)  {
 
 	$textD = urldecode($text);
@@ -264,6 +253,42 @@ Route::get('/chat/{convo_id}/{text}', function ($convo_id, $text)  {
 
     return json_encode($out);
 });
+
+Route::get('/logs', ['middleware' => 'auth', function ()  {
+    $user = Auth::user();
+    $user_id=$user->id;
+
+    $logs = App\Logs::where('user_id', $user_id)->get();
+
+    return json_encode($logs);
+}]);
+
+Route::get('/logs/delete', ['middleware' => 'auth', function ()  {
+    $user = Auth::user();
+    $user_id=$user->id;
+
+    App\Logs::where('user_id', $user_id)->delete();
+}]);
+
+// Admin
+Route::get('/admin/question/get/{id}', ['middleware' => ['auth', 'admin'], function($id) {
+
+	$question = DB::select('SELECT * FROM Questions  WHERE QUESTIONNUMBER = :qnum', ['qnum' => $id]);
+
+    return view('admin.question', ['question' => $question[0]]);
+}]);
+
+Route::get('/admin/question/update/{id}/{field}/{value}', ['middleware' => ['auth', 'admin'], function($id, $field, $value) {
+
+	DB::update("UPDATE Questions SET $field = :value WHERE QUESTIONNUMBER = :qnum", ['qnum' => $id, 'value' => $value]);
+	$question = DB::select('SELECT * FROM Questions  WHERE QUESTIONNUMBER = :qnum', ['qnum' => $id]);
+    
+
+    
+    $datentime = new DateTime;
+    DB::update("UPDATE Questions_LastUpdates SET LASTUPDATED = :datentime WHERE QUESTIONNUMBER = :qnum", ['qnum' => $id, 'datentime' => $datentime]);
+    return view('admin.question', ['question' => $question[0]]);
+}]);
 
 // Route::get('/favourite/notify', ['middleware' => 'auth', function ()  {
 //     $user = Auth::user();
