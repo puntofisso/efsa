@@ -12,6 +12,7 @@
 */
 
 use App\Favourites;
+use App\Logs;
 
 Route::get('/', function () {
     return view('welcome');
@@ -228,6 +229,41 @@ Route::get('/favourite/list/full', ['middleware' => 'auth', function ()  {
     	 return json_encode($notif);
 }]);
 
+// Chatbot interaction
+Route::get('/chat/{convo_id}/{text}', function ($convo_id, $text)  {
+
+	$textD = urldecode($text);
+    $user = Auth::user();
+    $user_id = '-1';
+    $out = array();
+
+    if ($user)
+    	$user_id=$user->id;
+	
+	$url = "https://efsa-chat.ptfs.uk/Program-O-master/chatbot/conversation_start.php?say=$text&convo_id=$convo_id";
+
+	$client = new GuzzleHttp\Client();
+    $chatbot = $client->get($url);
+    $code = $chatbot->getStatusCode();
+    $body = $chatbot->getBody();
+
+    if ($code <> 200) {
+    	$out['error'] = "problems communicating with the AI engine";
+		return json_encode($out);
+    }
+    $out['chatbot'] = json_decode($body);
+    $out['user'] = $user_id;
+
+    // Store in Logs table    
+    $log = new Logs;
+    $log->user_id = $user_id;
+    $log->usertext = $textD;
+    $log->bottext = $out['chatbot']->botsay;
+    $log->convo_id = $convo_id;    
+    $log->save();
+
+    return json_encode($out);
+});
 
 // Route::get('/favourite/notify', ['middleware' => 'auth', function ()  {
 //     $user = Auth::user();
