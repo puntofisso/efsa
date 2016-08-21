@@ -316,7 +316,7 @@ Route::get('/favourite/list/full', ['middleware' => 'auth', function ()  {
     $questions = array();
     $companies = array();
 
-    $favourites = DB::select('SELECT f.*, u.email FROM Favourites f, Users u WHERE f.user_id = :userid', ['userid' => $user_id]);
+    $favourites = DB::select('SELECT f.*, u.email FROM favourites f, users u WHERE f.user_id = :userid', ['userid' => $user_id]);
             
           
 
