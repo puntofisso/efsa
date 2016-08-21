@@ -101,7 +101,7 @@ Route::get('/favourite/list/full', function ()  {
     $questions = array();
     $companies = array();
 
-    $favourites = DB::select('SELECT f.*, u.email FROM Favourites f, Users u WHERE f.user_id = :userid', ['userid' => $user_id]);
+    $favourites = DB::select('SELECT f.*, u.email FROM favourites f, Users u WHERE f.user_id = :userid', ['userid' => $user_id]);
             
           
 
