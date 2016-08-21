@@ -11,6 +11,24 @@ Route::get('/', function () {
 Route::auth();
 Route::get('/home', 'HomeController@index');
 
+// Authentication via Token
+//Route::resource('api/authenticate', 'AuthenticateController', ['only' => ['index']]);
+//Route::post('api/authenticate', 'AuthenticateController@authenticate');
+
+Route::group(['prefix' => 'api'], function()
+{
+	Route::post('authenticate', 'AuthenticateController@authenticate');
+	Route::group(['middleware' => 'jwt.auth'], function()
+	{
+		Route::resource('authenticate', 'AuthenticateController', ['only' => ['index']]);
+		Route::get('test', function() {
+			$user = Auth::user();
+    		$user_id=$user->id;
+    		$notif['message'] = "You are user ".$user_id." and your e-mail is".  $user->email;
+    		return json_encode($notif);
+		});
+	});
+});
 // Questions
 Route::get('/questions/get/{id}', function ($id) {
 
@@ -290,83 +308,6 @@ Route::get('/admin/question/update/{id}/{field}/{value}', ['middleware' => ['aut
     return view('admin.question', ['question' => $question[0]]);
 }]);
 
-// Route::get('/favourite/notify', ['middleware' => 'auth', function ()  {
-//     $user = Auth::user();
-//     $user_id=$user->id;
 
-//     $questions = array();
-//     $companies = array();
-
-//     $favourites = DB::select('SELECT f.*, u.email FROM Favourites f, Users u WHERE f.user_id = :userid', ['userid' => $user_id]);
-            
-          
-
-//             foreach ($favourites as $fav) {
-            	
-//             //2. if type is QUESTION...
-//             if ($fav->type == 'question') {
-               
-
-
-//                 // Get Question date
-//                 $qnumber = $fav->fav_identifier;
-//                 $lastupdateRow = DB::select('SELECT l.LASTUPDATED FROM Questions q, Questions_LastUpdates l WHERE q.QUESTIONNUMBER = l.QUESTIONNUMBER
-//                     AND q.QUESTIONNUMBER = :qnumber', ['qnumber' => $qnumber]);
-                
-//                 $lastupdate = $lastupdateRow[0]->LASTUPDATED;
-
-                
-//                 // Check date
-//                 $lastupdatePhp =  strtotime( $lastupdate );
-//                 $favdatePhp = strtotime($fav->lastupdate);
-               
-//                 if ($lastupdatePhp > $favdatePhp) {
-                	
-//                 	$thisq['QUESTIONNUMBER'] = $qnumber;
-//                 	$thisq['LASTUPDATED'] = $lastupdate;
-//                     $questions[] = $thisq;
-//                 }
-//             }
-
-//             // 3. if type is COMPANY...
-//             if ($fav->type == 'company') {
-
-                
-//                 // Get most recent Question date linked to that company
-//                 $company = $fav->fav_identifier;
-
-//                 $lastupdateRow = DB::select('SELECT max(l.LASTUPDATED) as MAXDATE FROM Questions_LastUpdates l, Questions q WHERE l.QUESTIONNUMBER = q.QUESTIONNUMBER  AND q.PETITIONER = :company', ['company' => $company]);
-//                 $lastupdate = $lastupdateRow[0]->MAXDATE;
-
-//                 // Get all questions related
-//                 $allquestions = DB::select('SELECT q.QUESTIONNUMBER as num, l.LASTUPDATED as upd FROM Questions_LastUpdates l, Questions q WHERE l.QUESTIONNUMBER = q.QUESTIONNUMBER  AND q.PETITIONER = :company ORDER BY l.LASTUPDATED DESC', ['company' => $company]);
-//                 $allq = array();
-
-//                 foreach ($allquestions as $onequestion) {
-//                 	$thisq['QUESTIONNUMBER'] = $onequestion->num;
-//                 	$thisq['LASTUPDATED'] = $onequestion->upd;
-//                 	$allq[] = $thisq;
-//                 }
-
-//                 // Check date
-//                 $lastupdatePhp =  strtotime( $lastupdate );
-//                 $favdatePhp = strtotime($fav->lastupdate);
-               
-//                 if ($lastupdatePhp > $favdatePhp) {
-//                      $thisc['COMPANY'] = $company;
-//                      $thisc['QUESTIONS'] = $allq;
-//                      $companies[] = $thisc;
-//                 }
-                
-
-
-//             }
-
-//     }
-//                  $notif['questions'] = $questions;
-//              $notif['companies'] = $companies;
-
-//     	 return json_encode($notif);
-// }]);
 
 
