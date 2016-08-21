@@ -27,7 +27,158 @@ Route::group(['prefix' => 'api'], function()
     		$notif['message'] = "You are user ".$user_id." and your e-mail is".  $user->email;
     		return json_encode($notif);
 		});
+
+		// Logs Management
+		Route::get('/logs', function ()  {
+    		$user = Auth::user();
+   			$user_id=$user->id;
+
+    		$logs = App\Logs::where('user_id', $user_id)->get();
+
+    		return json_encode($logs);
+		});
+
+		Route::get('/logs/delete', function ()  {
+    		$user = Auth::user();
+    		$user_id=$user->id;
+
+    		App\Logs::where('user_id', $user_id)->delete();
+		});
+
+		Route::get('/favourite/add/{type}/{id}', ['middleware' => 'auth', function ($type, $id)  {
+
+    $user = Auth::user();
+    $user_id=$user->id;
+
+    $dt = new DateTime;
+
+	$fav = App\Favourites::firstOrNew(array('fav_identifier' => $id, 'user_id' => $user_id));
+	if (!($fav->exists)) {
+		$fav->user_id = $user_id;
+    	$fav->type = $type;
+    	$fav->fav_identifier = $id;
+    	$fav->lastupdate = $dt;
+		$fav->save();
+	}
+}]);
+
+Route::get('/favourite/remove/{type}/{id}', function ($type, $id)  {
+    $user = Auth::user();
+    $user_id=$user->id;
+
+    $deletedRows = App\Favourites::where('fav_identifier', $id)
+    							->where('user_id', $user_id)
+    							->delete();
+});
+
+Route::get('/favourite/check/{type}/{id}', function ($type, $id)  {
+
+    $user = Auth::user();
+    $user_id=$user->id;
+
+	$fav = App\Favourites::firstOrNew(array('fav_identifier' => $id, 'user_id' => $user_id));
+	if ($fav->exists) {
+		$out['favourite'] = "yes";
+	} else {
+		$out['favourite'] = "no";
+	}
+	return json_encode($out);
+});
+
+// List favourites for user
+Route::get('/favourite/list/light',  function ()  {
+    $user = Auth::user();
+    $user_id=$user->id;
+    $notif = App\Favourites::where('user_id', $user_id)->get();
+    return json_encode($notif);
+});
+
+
+Route::get('/favourite/list/full', function ()  {
+    $user = Auth::user();
+    $user_id=$user->id;
+
+    $questions = array();
+    $companies = array();
+
+    $favourites = DB::select('SELECT f.*, u.email FROM Favourites f, Users u WHERE f.user_id = :userid', ['userid' => $user_id]);
+            
+          
+
+            foreach ($favourites as $fav) {
+            	
+            //2. if type is QUESTION...
+            if ($fav->type == 'question') {
+               
+
+                // Get Question date
+                $qnumber = $fav->fav_identifier;
+                $lastupdateRow = DB::select('SELECT l.LASTUPDATED FROM Questions q, Questions_LastUpdates l WHERE q.QUESTIONNUMBER = l.QUESTIONNUMBER
+                    AND q.QUESTIONNUMBER = :qnumber', ['qnumber' => $qnumber]);
+                
+                $lastupdate = $lastupdateRow[0]->LASTUPDATED;
+
+                
+                // Check date
+                $lastupdatePhp =  strtotime( $lastupdate );
+                $favdatePhp = strtotime($fav->lastupdate);
+               
+                //if ($lastupdatePhp > $favdatePhp) {
+                	
+                	$thisq['QUESTIONNUMBER'] = $qnumber;
+                	$thisq['LASTUPDATED'] = $lastupdate;
+                    $questions[] = $thisq;
+                //}
+            }
+
+            // 3. if type is COMPANY...
+            if ($fav->type == 'company') {
+
+                
+                // Get most recent Question date linked to that company
+                $company = $fav->fav_identifier;
+
+                $lastupdateRow = DB::select('SELECT max(l.LASTUPDATED) as MAXDATE FROM Questions_LastUpdates l, Questions q WHERE l.QUESTIONNUMBER = q.QUESTIONNUMBER  AND q.PETITIONER = :company', ['company' => $company]);
+                $lastupdate = $lastupdateRow[0]->MAXDATE;
+
+                // Get all questions related
+                $allquestions = DB::select('SELECT q.QUESTIONNUMBER as num, l.LASTUPDATED as upd FROM Questions_LastUpdates l, Questions q WHERE l.QUESTIONNUMBER = q.QUESTIONNUMBER  AND q.PETITIONER = :company ORDER BY l.LASTUPDATED DESC', ['company' => $company]);
+                $allq = array();
+
+                foreach ($allquestions as $onequestion) {
+                	$thisq['QUESTIONNUMBER'] = $onequestion->num;
+                	$thisq['LASTUPDATED'] = $onequestion->upd;
+                	$allq[] = $thisq;
+                }
+
+                // Check date
+                $lastupdatePhp =  strtotime( $lastupdate );
+                $favdatePhp = strtotime($fav->lastupdate);
+               
+                //if ($lastupdatePhp > $favdatePhp) {
+                     $thisc['COMPANY'] = $company;
+                     $thisc['QUESTIONS'] = $allq;
+                     $companies[] = $thisc;
+                //}
+                
+
+
+            }
+
+    }
+                 $notif['questions'] = $questions;
+             $notif['companies'] = $companies;
+
+    	 return json_encode($notif);
+});
+
+
+
 	});
+
+	
+
+
 });
 // Questions
 Route::get('/questions/get/{id}', function ($id) {
