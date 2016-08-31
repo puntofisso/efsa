@@ -7,6 +7,40 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// LOOKUP endpoints
+Route::get('/LOOKUP/QUESTIONS/date/{from}/{to}', function($from, $to) {
+	$nameDecoded = urldecode($name);
+	$query=DB::select('SELECT QUESTIONNUMBER, RECEPTIONDATE from Questions WHERE PETITIONER = :petitioner ORDER BY RECEPTIONDATE ASC', ['petitioner' => $nameDecoded]);
+	return json_encode($query);
+});
+
+Route::get('/LOOKUP/COMPANY/{company}', function($company) {
+	
+});
+
+Route::get('/LOOKUP/SUBSTANCE/{substance}', function($substance) {
+	
+});
+
+Route::get('/LOOKUP/HANDLER/{handler}', function($handler) {
+	
+});
+
+Route::get('/LIST/units', function() {
+	$query=DB::select('SELECT distinct UNIT FROM Questions ORDER BY `Questions`.`UNIT` ASC' );
+	return json_encode($query);
+});
+
+Route::get('/LIST/panels', function() {
+	$query=DB::select('SELECT distinct PANEL FROM Questions ORDER BY `Questions`.`PANEL` ASC' );
+	return json_encode($query);
+});
+
+Route::get('/LIST/companies', function() {
+	
+});
+
+
 // Authentication framework by Laravel
 Route::auth();
 Route::get('/home', 'HomeController@index');
