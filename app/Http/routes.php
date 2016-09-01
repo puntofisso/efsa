@@ -209,6 +209,13 @@ Route::group(['prefix' => 'api'], function()
 	});
 
 });
+// Mandates
+Route::get('/mandates/get/{id}', function ($id) {
+
+    $questions = DB::select('select * from efsa.Questions where efsa.Questions.MANDATE = :id', ['id' => $id]);
+	return json_encode($questions);
+});
+
 // Questions
 Route::get('/questions/get/{id}', function ($id) {
 
@@ -283,6 +290,12 @@ Route::get('/unitpanel/panels', function() {
 	$query=DB::select('SELECT distinct PANEL FROM Questions ORDER BY `Questions`.`PANEL` ASC' );
 	return json_encode($query);
 });
+
+Route::get('/unitpanel/get/{name}', function($name ) {
+	$query=DB::select('SELECT * FROM Questions WHERE UNIT = :name1 OR PANEL = :name2', ['name1' => $name, 'name2' => $name] );
+	return json_encode($query);
+});
+
 
 // Petitioners (i.e. companies)
 Route::get('/petitioners/list', function() {
