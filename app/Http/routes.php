@@ -244,13 +244,27 @@ Route::get('/questions/get/{id}/lastupdate', function ($id) {
 
 Route::get('/questions/tags/search/{tags}', function ($tags) {
 
-
 	$questions = DB::select('select QUESTIONNUMBER, PETITIONER, m.tag, m.Score from efsa.Questions q, efsa.questions_metas m where q.QUESTIONNUMBER = m.question_id AND m.tag IN ( :tags )', ['tags' => $tags]);
 
+	$out['questions'] = $questions;
 
-	return json_encode($questions);
+	$companies = DB::select('select distinct PETITIONER, count(distinct PETITIONER) AS count from efsa.Questions q, efsa.questions_metas m where q.QUESTIONNUMBER = m.question_id AND m.tag IN ( :tags ) GROUP BY PETITIONER', ['tags' => $tags]);
 
+	$out['companies'] = $companies;
 
+	return json_encode($out);
+
+	
+
+});
+
+Route::get('/companies/tags/search/{tags}', function ($tags) {
+
+	$companies = DB::select('select distinct PETITIONER, count(distinct PETITIONER) AS count from efsa.Questions q, efsa.questions_metas m where q.QUESTIONNUMBER = m.question_id AND m.tag IN ( :tags ) GROUP BY PETITIONER', ['tags' => $tags]);
+
+	$out['companies'] = $companies;
+
+	return json_encode($out);
 
 });
 
