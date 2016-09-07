@@ -15,7 +15,8 @@ Route::get('/LOOKUP/QUESTIONS/date/{from}/{to}', function($from, $to) {
 });
 
 Route::get('/LOOKUP/COMPANY/{company}', function($company) {
-	
+	// SELECT DISTINCT PETITIONER FROM `Questions` WHERE SOUNDEX(PETITIONER) LIKE CONCAT(SOUNDEX('Monsanto'), '%')
+
 });
 
 Route::get('/LOOKUP/SUBSTANCE/{substance}', function($substance) {
@@ -211,9 +212,14 @@ Route::group(['prefix' => 'api'], function()
 });
 // Mandates
 Route::get('/mandates/get/{id}', function ($id) {
+    $mandates = DB::select('select * from efsa.Questions where efsa.Questions.MANDATE = :id', ['id' => $id]);
+	return json_encode($mandates);
+});
 
-    $questions = DB::select('select * from efsa.Questions where efsa.Questions.MANDATE = :id', ['id' => $id]);
-	return json_encode($questions);
+Route::get('/mandates/list', function () {
+
+    $mandates = DB::select('select DISTINCT MANDATE from efsa.Questions');
+	return json_encode($mandates);
 });
 
 // Questions
