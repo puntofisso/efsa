@@ -450,7 +450,27 @@ Route::get('/favourite/list/full', ['middleware' => 'auth', function ()  {
 }]);
 
 // Chatbot interaction & Logs management
-Route::get('/chat/{convo_id}/{text}', function ($convo_id, $text)  {
+Route::get('/chat/luis/{previeworproduction}/{text}', function($previeworproduction, $text) {
+
+	if ($previeworproduction=="preview") {
+		$url = "https://api.projectoxford.ai/luis/v1/application/preview?id=22c117cc-11c2-4424-99e9-35284fc26eae&subscription-key=1a42e6ab7d1c4c86ad68118b419da621";
+	} else if ($previeworproduction == "production") {
+		$url = "https://api.projectoxford.ai/luis/v1/application?id=22c117cc-11c2-4424-99e9-35284fc26eae&subscription-key=1a42e6ab7d1c4c86ad68118b419da621";
+	} else die();
+	// https://api.projectoxford.ai/luis/v1/application/preview?id=22c117cc-11c2-4424-99e9-35284fc26eae&subscription-key=1a42e6ab7d1c4c86ad68118b419da621&q=test 
+
+	$url = "$url&q=$text";
+
+	$client = new GuzzleHttp\Client();
+    $chatbot = $client->get($url);
+    $code = $chatbot->getStatusCode();
+    $body = $chatbot->getBody();
+
+    return $body;
+
+});
+
+Route::get('/chat/aiml/{convo_id}/{text}', function ($convo_id, $text)  {
 
 	$textD = urldecode($text);
     $user = Auth::user();
