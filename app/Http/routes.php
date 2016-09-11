@@ -468,6 +468,7 @@ Route::get('/chat/unity/{convoid}/{text}', function($convoid,$text) {
 	
 	// 2. if AIML replies NO,
 	if ($aimlreply == "{NO_MATCH}") {
+		echo "Calling LUIS... ";
 		// 3. call LUIS
 		$url = "/chat/luis/preview/$text";
 		$request = Request::create($url, 'GET');
