@@ -258,13 +258,13 @@ Route::get('/questions/get/{id}/lastupdate', function ($id) {
 
 Route::get('/questions/tags/search/{tags}', function ($tags) {
 
-	$questions = DB::select('select QUESTIONNUMBER, PETITIONER, m.tag, m.Score from efsa.Questions q, efsa.questions_metas m where q.QUESTIONNUMBER = m.question_id AND m.tag IN ( :tags )', ['tags' => $tags]);
+	$questions = DB::select('select QUESTIONNUMBER, PETITIONER, m.tag, m.Score, SUBJECT, STATUS, RECEPTIONDATE from efsa.Questions q, efsa.questions_metas m where q.QUESTIONNUMBER = m.question_id AND m.tag IN ( :tags )', ['tags' => $tags]);
 
 	$out['questions'] = $questions;
 
-	$companies = DB::select('select distinct PETITIONER, count(distinct PETITIONER) AS count from efsa.Questions q, efsa.questions_metas m where q.QUESTIONNUMBER = m.question_id AND m.tag IN ( :tags ) GROUP BY PETITIONER', ['tags' => $tags]);
+	// $companies = DB::select('select distinct PETITIONER, count(distinct PETITIONER) AS count from efsa.Questions q, efsa.questions_metas m where q.QUESTIONNUMBER = m.question_id AND m.tag IN ( :tags ) GROUP BY PETITIONER', ['tags' => $tags]);
 
-	$out['companies'] = $companies;
+	// $out['companies'] = $companies;
 
 	return json_encode($out);
 
@@ -507,16 +507,6 @@ Route::get('/chat/unity/{convoid}/{text}', function($convoid,$text) {
 	echo $aimlreply;
 });
 
-// TODO
-//1 // Route::get('') -> levensthein search for companies
-	//  Route::get('') -> levensthein search for substances
-	// Route::get('') -> levensthein search for unit and panel 
-	// -> this might require a re-inventory of company names?
-	//     e.g. Monsanto1, Monsanto2, Monstanto3 etc ->COLLAPSE to Monsanto (in DB)
-	// Route::get('') -> convert string to php date
-//2 // list possible LOOKUP_* in prev code
-//3 // feed LUIS all utterances to satisfy lookups
-//4 // get clean list of companies and substances. add to phraselist
 
 Route::get('/chat/luis/{previeworproduction}/{text}', function($previeworproduction, $text) {
 	//TODO add to logs
