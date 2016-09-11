@@ -8,6 +8,7 @@ Route::get('/', function () {
 });
 
 // LOOKUP endpoints
+// TODO
 Route::get('/LOOKUP/QUESTIONS/date/{from}/{to}', function($from, $to) {
 	$nameDecoded = urldecode($name);
 	$query=DB::select('SELECT QUESTIONNUMBER, RECEPTIONDATE from Questions WHERE PETITIONER = :petitioner ORDER BY RECEPTIONDATE ASC', ['petitioner' => $nameDecoded]);
@@ -318,13 +319,13 @@ Route::get('/petitioners/list', function() {
 
 Route::get('/petitioners/get/{name}', function($name) {
 	$nameDecoded = urldecode($name);
-	$query=DB::select('SELECT * from Questions WHERE PETITIONER = :petitioner', ['petitioner' => $nameDecoded]);
+	$query=DB::select('SELECT * from Questions WHERE PETITIONER LIKE :petitioner', ['petitioner' => "%$nameDecoded%"]);
 	return json_encode($query);
 });
 
 Route::get('/petitioners/timeline/{name}', function($name) {
 	$nameDecoded = urldecode($name);
-	$query=DB::select('SELECT QUESTIONNUMBER, RECEPTIONDATE from Questions WHERE PETITIONER = :petitioner ORDER BY RECEPTIONDATE ASC', ['petitioner' => $nameDecoded]);
+	$query=DB::select('SELECT QUESTIONNUMBER, RECEPTIONDATE from Questions WHERE PETITIONER LIKE :petitioner ORDER BY RECEPTIONDATE ASC', ['petitioner' => "%$nameDecoded%"]);
 	return json_encode($query);
 });
 
@@ -468,7 +469,7 @@ Route::get('/chat/unity/{convoid}/{text}', function($convoid,$text) {
 	
 	// 2. if AIML replies NO,
 	if ($aimlreply == "{NO_MATCH}") {
-		echo "Calling LUIS... ";
+		
 		// 3. call LUIS
 		$url = "/chat/luis/preview/$text";
 		$request = Request::create($url, 'GET');
@@ -480,19 +481,26 @@ Route::get('/chat/unity/{convoid}/{text}', function($convoid,$text) {
 		// 4. parse LUIS output; if sufficient, call AIML direct 
 	    //                   <if insufficient, dialog with LUIS>
 	    // LOOOKUP_HANDLER, LOOKUP_SUBSTANCE, LOOKUP_COMPANY, LOOKUP_QUESTIONS, LIST, None
-		// IF (intent== LOOKUP_...) == 1 ...
-		$url = "/chat/aiml/$convoid/SET COMPANY ...";
-		// IF (intent==) == 2 ...
-		$url = "/chat/aiml/$convoid/SET SUBSTANCE ...";
-		// IF NO MATCH FROM LUIS -> AIML with LUISNOMATH
-		$url = "/chat/aiml/$convoid/LUISNOMATCH";
-		{	
-			$request = Request::create($url, 'GET');
-			$response = Route::dispatch($request);
-			$json = json_decode($response->getOriginalContent(),true);
-			$aimlreply = $json["chatbot"]["botsay"];
+		if ($intent== "LOOKUP_COMPANY") {
+			// TODO parse JSON
+			$url = "/chat/aiml/$convoid/SET COMPANY ...";
 		}
-		// HOW TO CHECK IF CONNECTION FAILED
+		elseif ($intent == "LOOKUP_...") {
+			$url = "/chat/aiml/$convoid/SET SUBSTANCE ...";
+		} elseif ($intent == "None") {
+			$url = "/chat/aiml/$convoid/LUISNOMATCH";
+		}
+		else {
+			// No match, should never be here
+			$url = "/chat/aiml/$convoid/LUISNOMATCH";
+		}
+		
+		$request = Request::create($url, 'GET');
+		$response = Route::dispatch($request);
+		$json = json_decode($response->getOriginalContent(),true);
+		$aimlreply = $json["chatbot"]["botsay"];
+		
+		// TODO HOW TO CHECK IF CONNECTION FAILED
 		
 	} 
 
