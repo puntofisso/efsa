@@ -281,6 +281,13 @@ Route::get('/companies/tags/search/{tags}', function ($tags) {
 
 });
 
+Route::get('/tags/get/{tag}', function ($tag) {
+
+	$tags = DB::select('select distinct tag,score from questions_metas where tag LIKE :tag', ['tag' => "%$tag%"]);
+	return json_encode($tags);
+
+});
+
 // Unit and Panel
 Route::get('/unitpanel/all', function() {
 	$query=DB::select('SELECT distinct UNIT,PANEL FROM Questions ORDER BY `Questions`.`UNIT` ASC' );
@@ -298,7 +305,7 @@ Route::get('/unitpanel/panels', function() {
 });
 
 Route::get('/unitpanel/get/{name}', function($name ) {
-	$query=DB::select('SELECT * FROM Questions WHERE UNIT = :name1 OR PANEL = :name2', ['name1' => $name, 'name2' => $name] );
+	$query=DB::select('SELECT * FROM Questions WHERE UNIT LIKE :name1 OR PANEL LIKE :name2', ['name1' => "%$name%", 'name2' => "%$name%"] );
 	return json_encode($query);
 });
 
@@ -450,14 +457,65 @@ Route::get('/favourite/list/full', ['middleware' => 'auth', function ()  {
 }]);
 
 // Chatbot interaction & Logs management
-Route::get('/chat/luis/{previeworproduction}/{text}', function($previeworproduction, $text) {
+Route::get('/chat/unity/{convoid}/{text}', function($convoid,$text) {
 
+	// 1. call AIML
+	$url = "/chat/aiml/$convoid/$text";
+	$request = Request::create($url, 'GET');
+	$response = Route::dispatch($request);
+	$json = json_decode($response->getOriginalContent(),true);
+	$aimlreply = $json["chatbot"]["botsay"];
+	
+	// 2. if AIML replies NO,
+	if ($aimlreply == "{NO_MATCH}") {
+		// 3. call LUIS
+		$url = "/chat/luis/preview/$text";
+		$request = Request::create($url, 'GET');
+		$response = Route::dispatch($request);
+		$json = json_decode($response->getOriginalContent(),true);
+		$intent = $json["topScoringIntent"]["intent"];
+
+		// TODO
+		// 4. parse LUIS output; if sufficient, call AIML direct 
+	    //                   <if insufficient, dialog with LUIS>
+	    // LOOOKUP_HANDLER, LOOKUP_SUBSTANCE, LOOKUP_COMPANY, LOOKUP_QUESTIONS, LIST, None
+		// IF (intent== LOOKUP_...) == 1 ...
+		$url = "/chat/aiml/$convoid/SET COMPANY ...";
+		// IF (intent==) == 2 ...
+		$url = "/chat/aiml/$convoid/SET SUBSTANCE ...";
+		// IF NO MATCH FROM LUIS -> AIML with LUISNOMATH
+		$url = "/chat/aiml/$convoid/LUISNOMATCH";
+		{	
+			$request = Request::create($url, 'GET');
+			$response = Route::dispatch($request);
+			$json = json_decode($response->getOriginalContent(),true);
+			$aimlreply = $json["chatbot"]["botsay"];
+		}
+		// HOW TO CHECK IF CONNECTION FAILED
+		
+	} 
+
+	echo $aimlreply;
+});
+
+// TODO
+//1 // Route::get('') -> levensthein search for companies
+	//  Route::get('') -> levensthein search for substances
+	// Route::get('') -> levensthein search for unit and panel 
+	// -> this might require a re-inventory of company names?
+	//     e.g. Monsanto1, Monsanto2, Monstanto3 etc ->COLLAPSE to Monsanto (in DB)
+	// Route::get('') -> convert string to php date
+//2 // list possible LOOKUP_* in prev code
+//3 // feed LUIS all utterances to satisfy lookups
+//4 // get clean list of companies and substances. add to phraselist
+
+Route::get('/chat/luis/{previeworproduction}/{text}', function($previeworproduction, $text) {
+	//TODO add to logs
 	if ($previeworproduction=="preview") {
 		$url = "https://api.projectoxford.ai/luis/v1/application/preview?id=22c117cc-11c2-4424-99e9-35284fc26eae&subscription-key=1a42e6ab7d1c4c86ad68118b419da621";
 	} else if ($previeworproduction == "production") {
 		$url = "https://api.projectoxford.ai/luis/v1/application?id=22c117cc-11c2-4424-99e9-35284fc26eae&subscription-key=1a42e6ab7d1c4c86ad68118b419da621";
 	} else die();
-	// https://api.projectoxford.ai/luis/v1/application/preview?id=22c117cc-11c2-4424-99e9-35284fc26eae&subscription-key=1a42e6ab7d1c4c86ad68118b419da621&q=test 
 
 	$url = "$url&q=$text";
 
