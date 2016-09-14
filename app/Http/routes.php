@@ -31,6 +31,86 @@ Route::get('/LOOKUP/HANDLER/{company}/{substance}/{datefrom}/{dateto}', function
 	return json_encode($query);
 });
 
+Route::get('/LOOKUP/COMPANY/{handler}/{substance}/{datefrom}/{dateto}', function($handler, $substance, $datefrom, $dateto) {
+
+	$sql="SELECT DISTINCT q.QUESTIONNUMBER, q.PETITIONER FROM Questions q INNER JOIN questions_metas m
+		ON q.QUESTIONNUMBER = m.question_id";
+	$dictvar = [];
+	if ($handler != "NULL") {
+		$sql = $sql. " AND (q.UNIT LIKE :unit OR q.PANEL LIKE :panel)";
+		$dictvar['unit'] = "%$handler%";
+		$dictvar['panel'] = "%$handler%";
+	}
+	if ($substance != "NULL") {
+		$sql = $sql. " AND  m.tag LIKE :substance";
+		$dictvar['substance'] = "%$substance%";
+	} 
+	if (($datefrom != "NULL") && ($dateto != "NULL")) {
+		$sql = $sql. " AND  q.RECEPTIONDATE >= :datefrom AND q.RECEPTIONDATE <= :dateto";
+		$dictvar['datefrom'] = $datefrom;	
+		$dictvar['dateto'] = $dateto;	
+	}
+
+	$query=DB::select($sql, $dictvar);
+	return json_encode($query);
+});
+
+Route::get('/LOOKUP/SUBSTANCE/{handler}/{company}/{datefrom}/{dateto}', function($handler, $company, $datefrom, $dateto) {
+
+	$sql="SELECT DISTINCT q.QUESTIONNUMBER, m.tag, m.score FROM Questions q INNER JOIN questions_metas m
+		ON q.QUESTIONNUMBER = m.question_id";
+	$dictvar = [];
+	if ($handler != "NULL") {
+		$sql = $sql. " AND (q.UNIT LIKE :unit OR q.PANEL LIKE :panel)";
+		$dictvar['unit'] = "%$handler%";
+		$dictvar['panel'] = "%$handler%";
+	}
+	if ($company != "NULL") {
+		$sql = $sql. " AND q.PETITIONER LIKE :company";
+		$dictvar['company'] = "%$company%";
+	}
+	if (($datefrom != "NULL") && ($dateto != "NULL")) {
+		$sql = $sql. " AND  q.RECEPTIONDATE >= :datefrom AND q.RECEPTIONDATE <= :dateto";
+		$dictvar['datefrom'] = $datefrom;	
+		$dictvar['dateto'] = $dateto;	
+	}
+	$sql = $sql. " ORDER BY m.score DESC";
+
+	$query=DB::select($sql, $dictvar);
+	return json_encode($query);
+});
+
+
+///LOOKUP/QUESTION/$company/$handler/$substance/$datefrom/$dateto
+Route::get('/LOOKUP/QUESTION/{company}/{handler}/{substance}/{datefrom}/{dateto}', function($company, $handler, $substance, $datefrom, $dateto) {
+
+	$sql="SELECT DISTINCT q.QUESTIONNUMBER, q.RECEPTIONDATE FROM Questions q INNER JOIN questions_metas m
+		ON q.QUESTIONNUMBER = m.question_id";
+	$dictvar = [];
+	if ($handler != "NULL") {
+		$sql = $sql. " AND (q.UNIT LIKE :unit OR q.PANEL LIKE :panel)";
+		$dictvar['unit'] = "%$handler%";
+		$dictvar['panel'] = "%$handler%";
+	}
+	if ($company != "NULL") {
+		$sql = $sql. " AND q.PETITIONER LIKE :company";
+		$dictvar['company'] = "%$company%";
+	}
+	if ($substance != "NULL") {
+		$sql = $sql. " AND  m.tag LIKE :substance";
+		$dictvar['substance'] = "%$substance%";
+	} 
+	if (($datefrom != "NULL") && ($dateto != "NULL")) {
+		$sql = $sql. " AND  q.RECEPTIONDATE >= :datefrom AND q.RECEPTIONDATE <= :dateto";
+		$dictvar['datefrom'] = $datefrom;	
+		$dictvar['dateto'] = $dateto;	
+	}
+	$sql = $sql." ORDER BY RECEPTIONDATE ASC";
+
+	$query=DB::select($sql, $dictvar);
+	return json_encode($query);
+});
+
 Route::get('/LIST/units', function() {
 	$query=DB::select('SELECT distinct UNIT FROM Questions ORDER BY `Questions`.`UNIT` ASC' );
 	return json_encode($query);
@@ -42,7 +122,8 @@ Route::get('/LIST/panels', function() {
 });
 
 Route::get('/LIST/companies', function() {
-	
+	$query=DB::select('SELECT distinct PETITIONER FROM Questions ORDER BY `Questions`.`PANEL` ASC' );
+	return json_encode($query);
 });
 
 
@@ -50,10 +131,11 @@ Route::get('/LIST/companies', function() {
 Route::auth();
 Route::get('/home', 'HomeController@index');
 
-// Authentication via Token
+
 //Route::resource('api/authenticate', 'AuthenticateController', ['only' => ['index']]);
 //Route::post('api/authenticate', 'AuthenticateController@authenticate');
 
+// Authentication via Token
 Route::group(['prefix' => 'api'], function()
 {
 	Route::post('authenticate', 'AuthenticateController@authenticate');
@@ -267,8 +349,6 @@ Route::get('/questions/tags/search/{tags}', function ($tags) {
 
 
 	return json_encode($out);
-
-	
 
 });
 
@@ -689,15 +769,52 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$myout["message"] = $msg;
 		$myout["handlers"] = $out;
 		$myout["url"] = $url;
-		
+
 		echo json_encode($myout);
 
 	} elseif ($intent == "LOOKUP_COMPANY") {
-	 	$msg = "This is a list of units/panels that have made questions within these parametres:";
+	 	$msg = "This is a list of companies that have asked questions within these parametres:";
+
+		$url = "/LOOKUP/COMPANY/$handler/$substance/$datefrom/$dateto";
+
+		$request = Request::create($url, 'GET');
+		$response = Route::dispatch($request);
+		$out = json_decode($response->getOriginalContent(),true);
+
+		$myout["message"] = $msg;
+		$myout["companies"] = $out;
+		$myout["url"] = $url;
+
+		echo json_encode($myout);
 	} elseif ($intent == "LOOKUP_QUESTION") {
 		$msg = "This is a list of questions that match those features:";
+
+		$url = "/LOOKUP/QUESTION/$company/$handler/$substance/$datefrom/$dateto";
+
+		$request = Request::create($url, 'GET');
+		$response = Route::dispatch($request);
+		$out = json_decode($response->getOriginalContent(),true);
+
+		$myout["message"] = $msg;
+		$myout["questions"] = $out;
+		$myout["url"] = $url;
+
+		echo json_encode($myout);
 	} elseif ($intent == "LOOKUP_SUBSTANCE") {
-		$msg = "This is a list of substances that ";
+		$msg = "This is a list of substances that correspond to these requests:";
+
+		$url = "/LOOKUP/SUBSTANCE/$handler/$company/$datefrom/$dateto";
+
+		$request = Request::create($url, 'GET');
+		$response = Route::dispatch($request);
+		$out = json_decode($response->getOriginalContent(),true);
+
+		$myout["message"] = $msg;
+		$myout["substances"] = $out;
+		$myout["url"] = $url;
+
+		echo json_encode($myout);
+
 	} elseif ($intent == "None") {
 		$msg = "Sorry, I am not able to answer that question.";
 	} else {
@@ -771,7 +888,6 @@ Route::get('/admin/question/update/{id}/{field}/{value}', ['middleware' => ['aut
 	$question = DB::select('SELECT * FROM Questions  WHERE QUESTIONNUMBER = :qnum', ['qnum' => $id]);
     
 
-    
     $datentime = new DateTime;
     DB::update("UPDATE Questions_LastUpdates SET LASTUPDATED = :datentime WHERE QUESTIONNUMBER = :qnum", ['qnum' => $id, 'datentime' => $datentime]);
     return view('admin.question', ['question' => $question[0]]);
