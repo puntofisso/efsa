@@ -648,6 +648,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
     $body = $chatbot->getBody();
 
 
+
     $json = json_decode($body,true);
 	$intent = $json["topScoringIntent"]["intent"];
 	$entities = $json["entities"];
@@ -768,6 +769,8 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$response = Route::dispatch($request);
 		$out = json_decode($response->getOriginalContent(),true);
 
+		$myout["original"] = $text;
+		$myout["query"] = $mytext;
 		$myout["message"] = $msg;
 		$myout["handlers"] = $out;
 		$myout["substances"] = array();
@@ -786,6 +789,8 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$response = Route::dispatch($request);
 		$out = json_decode($response->getOriginalContent(),true);
 
+		$myout["original"] = $text;
+		$myout["query"] = $mytext;
 		$myout["message"] = $msg;
 		$myout["companies"] = $out;
 		$myout["handlers"] = array();
@@ -804,6 +809,8 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$response = Route::dispatch($request);
 		$out = json_decode($response->getOriginalContent(),true);
 
+		$myout["original"] = $text;
+		$myout["query"] = $mytext;
 		$myout["message"] = $msg;
 		$myout["questions"] = $out;
 		$myout["handlers"] = array();
@@ -821,6 +828,8 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$response = Route::dispatch($request);
 		$out = json_decode($response->getOriginalContent(),true);
 
+		$myout["original"] = $text;
+		$myout["query"] = $mytext;
 		$myout["message"] = $msg;
 		$myout["substances"] = $out;
 		$myout["questions"] = array();
