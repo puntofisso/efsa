@@ -654,7 +654,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 	$handler = "NULL";
 	$company = "NULL";
 	$substance = "NULL";
-
+	$dates = array();
 
 	foreach ($entities as $entity) {
 		$ent_type = $entity["type"];
