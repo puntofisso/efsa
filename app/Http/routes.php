@@ -34,7 +34,7 @@ Route::get('/LOOKUP/HANDLER/{company}/{substance}/{datefrom}/{dateto}', function
 Route::get('/LOOKUP/COMPANY/{handler}/{substance}/{datefrom}/{dateto}', function($handler, $substance, $datefrom, $dateto) {
 
 	$sql="SELECT DISTINCT q.QUESTIONNUMBER, q.PETITIONER FROM Questions q INNER JOIN questions_metas m
-		ON q.QUESTIONNUMBER = m.question_id";
+		ON q.QUESTIONNUMBER = m.question_id WHERE q.PETITIONER <> '' ";
 	$dictvar = [];
 	if ($handler != "NULL") {
 		$sql = $sql. " AND (q.UNIT LIKE :unit OR q.PANEL LIKE :panel)";
@@ -757,7 +757,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 	
 	if ($intent== "LOOKUP_HANDLER") {
 		
-		$msg = "This is a list of units/panels that have dealt with that:";
+		
 
 		// TODO - Awful Workaround
 		$company = str_replace(" . ", ".",$company);
@@ -768,6 +768,8 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$request = Request::create($url, 'GET');
 		$response = Route::dispatch($request);
 		$out = json_decode($response->getOriginalContent(),true);
+
+		$msg = "I have found units/panels that have dealt with that:";
 
 		$myout["original"] = $text;
 		$myout["query"] = $mytext;
