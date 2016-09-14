@@ -638,8 +638,8 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 	} else if ($previeworproduction == "production") {
 		$url = "https://api.projectoxford.ai/luis/v1/application?id=22c117cc-11c2-4424-99e9-35284fc26eae&subscription-key=1a42e6ab7d1c4c86ad68118b419da621";
 	} else die();
-
-	$url = "$url&q=$text";
+	$mytext=urlencode($text);
+	$url = "$url&q=$mytext";
 
 	$client = new GuzzleHttp\Client();
     $chatbot = $client->get($url);
@@ -656,8 +656,6 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 	$substance = "NULL";
 
 
-
-	$dates = array();
 	foreach ($entities as $entity) {
 		$ent_type = $entity["type"];
 		$ent_value = $entity["entity"];
