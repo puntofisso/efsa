@@ -8,24 +8,27 @@ Route::get('/', function () {
 });
 
 // LOOKUP endpoints
-// TODO
-Route::get('/LOOKUP/QUESTIONS/date/{from}/{to}', function($from, $to) {
-	$nameDecoded = urldecode($name);
-	$query=DB::select('SELECT QUESTIONNUMBER, RECEPTIONDATE from Questions WHERE PETITIONER = :petitioner ORDER BY RECEPTIONDATE ASC', ['petitioner' => $nameDecoded]);
+Route::get('/LOOKUP/HANDLER/{company}/{substance}/{datefrom}/{dateto}', function($company, $substance, $datefrom, $dateto) {
+
+	$sql="SELECT DISTINCT q.QUESTIONNUMBER, q.UNIT, q.PANEL FROM Questions q INNER JOIN questions_metas m
+		ON q.QUESTIONNUMBER = m.question_id";
+	$dictvar = [];
+	if ($company != "NULL") {
+		$sql = $sql. " AND q.PETITIONER LIKE :company";
+		$dictvar['company'] = "%$company%";
+	}
+	if ($substance != "NULL") {
+		$sql = $sql. " AND  m.tag LIKE :substance";
+		$dictvar['substance'] = "%$substance%";
+	} 
+	if (($datefrom != "NULL") && ($dateto != "NULL")) {
+		$sql = $sql. " AND  q.RECEPTIONDATE >= :datefrom AND q.RECEPTIONDATE <= :dateto";
+		$dictvar['datefrom'] = $datefrom;	
+		$dictvar['dateto'] = $dateto;	
+	}
+
+	$query=DB::select($sql, $dictvar);
 	return json_encode($query);
-});
-
-Route::get('/LOOKUP/COMPANY/{company}', function($company) {
-	// SELECT DISTINCT PETITIONER FROM `Questions` WHERE SOUNDEX(PETITIONER) LIKE CONCAT(SOUNDEX('Monsanto'), '%')
-
-});
-
-Route::get('/LOOKUP/SUBSTANCE/{substance}', function($substance) {
-	
-});
-
-Route::get('/LOOKUP/HANDLER/{handler}', function($handler) {
-	
 });
 
 Route::get('/LIST/units', function() {
@@ -262,9 +265,6 @@ Route::get('/questions/tags/search/{tags}', function ($tags) {
 
 	$out['questions'] = $questions;
 
-	// $companies = DB::select('select distinct PETITIONER, count(distinct PETITIONER) AS count from efsa.Questions q, efsa.questions_metas m where q.QUESTIONNUMBER = m.question_id AND m.tag IN ( :tags ) GROUP BY PETITIONER', ['tags' => $tags]);
-
-	// $out['companies'] = $companies;
 
 	return json_encode($out);
 
@@ -476,22 +476,44 @@ Route::get('/chat/unity/{convoid}/{text}', function($convoid,$text) {
 		$response = Route::dispatch($request);
 		$json = json_decode($response->getOriginalContent(),true);
 		$intent = $json["topScoringIntent"]["intent"];
+		$entities = $json["entities"];
+		
+		$handler = "NULL";
+		$company = "NULL";
+		$substance = "NULL";
 
-		// TODO
-		// 4. parse LUIS output; if sufficient, call AIML direct 
-	    //                   <if insufficient, dialog with LUIS>
-	    // LOOOKUP_HANDLER, LOOKUP_SUBSTANCE, LOOKUP_COMPANY, LOOKUP_QUESTIONS, LIST, None
-		if ($intent== "LOOKUP_COMPANY") {
-			// TODO parse JSON
-			$url = "/chat/aiml/$convoid/SET COMPANY ...";
+		$dates = array();
+		foreach ($entities as $entity) {
+			$ent_type = $entity["type"];
+			$ent_value = $entity["entity"];
+
+			if ($ent_type == "handler") {
+				$handler = $ent_value;
+			}
+			if ($ent_type == "substance") {
+				$substance = $ent_value;
+			}
+			if ($ent_type == "company") {
+				$company = $ent_value;
+			}
+			if ($ent_type == "builtin.datetime.date") {
+				$dates[] = $entity["resolution"]["date"];
+			}
 		}
-		elseif ($intent == "LOOKUP_...") {
-			$url = "/chat/aiml/$convoid/SET SUBSTANCE ...";
+
+		if ($intent== "LOOKUP_HANDLER") {
+			$url = "/chat/aiml/$convoid/UNITPANEL SET $handler";
+		} elseif ($intent == "LOOKUP_COMPANY") {
+			//$company = $json["topScoringIntent"]["actions"][0]["parameters"][0]["value"][0]["entity"];
+			$url = "/chat/aiml/$convoid/COMPANY SET $company";
+		} elseif ($intent == "LOOKUP_QUESTIONS") {
+			// TODO define period
+			$period = "NULL";
+			$url = "/chat/aiml/$convoid/QUESTION SEARCH FROM $from TO $to IN $in HANDLER $handler SUBSTANCE $substance";
 		} elseif ($intent == "None") {
 			$url = "/chat/aiml/$convoid/LUISNOMATCH";
-		}
-		else {
-			// No match, should never be here
+		} else {
+			// Paranoid: no match, should never be here
 			$url = "/chat/aiml/$convoid/LUISNOMATCH";
 		}
 		
@@ -509,7 +531,28 @@ Route::get('/chat/unity/{convoid}/{text}', function($convoid,$text) {
 
 
 Route::get('/chat/luis/{previeworproduction}/{text}', function($previeworproduction, $text) {
-	//TODO add to logs
+	
+
+	if ($previeworproduction=="preview") {
+		$url = "https://api.projectoxford.ai/luis/v1/application/preview?id=22c117cc-11c2-4424-99e9-35284fc26eae&subscription-key=1a42e6ab7d1c4c86ad68118b419da621";
+	} else if ($previeworproduction == "production") {
+		$url = "https://api.projectoxford.ai/luis/v1/application?id=22c117cc-11c2-4424-99e9-35284fc26eae&subscription-key=1a42e6ab7d1c4c86ad68118b419da621";
+	} else die();
+
+
+	$url = "$url&q=$text";
+	
+	
+	$client = new GuzzleHttp\Client();
+    $chatbot = $client->get($url);
+    $code = $chatbot->getStatusCode();
+    $body = $chatbot->getBody();
+
+    return $body;
+});
+
+Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworproduction, $text) {
+
 	if ($previeworproduction=="preview") {
 		$url = "https://api.projectoxford.ai/luis/v1/application/preview?id=22c117cc-11c2-4424-99e9-35284fc26eae&subscription-key=1a42e6ab7d1c4c86ad68118b419da621";
 	} else if ($previeworproduction == "production") {
@@ -523,7 +566,143 @@ Route::get('/chat/luis/{previeworproduction}/{text}', function($previeworproduct
     $code = $chatbot->getStatusCode();
     $body = $chatbot->getBody();
 
-    return $body;
+
+    $json = json_decode($body,true);
+	$intent = $json["topScoringIntent"]["intent"];
+	$entities = $json["entities"];
+		
+	$handler = "NULL";
+	$company = "NULL";
+	$substance = "NULL";
+
+
+
+	$dates = array();
+	foreach ($entities as $entity) {
+		$ent_type = $entity["type"];
+		$ent_value = $entity["entity"];
+
+		if ($ent_type == "handler") {
+			$handler = $ent_value;
+		}
+		if ($ent_type == "substance") {
+			$substance = $ent_value;
+		}
+		if ($ent_type == "company") {
+			$company = $ent_value;
+		}
+		if ($ent_type == "builtin.datetime.date") {
+			$dates[] = $entity["resolution"]["date"];
+		}
+	}
+
+	$datefrom = "";
+	$dateto = "";
+
+	if (count($dates)==0) {
+		// all dates null
+		$datefrom = "NULL";
+		$dateto = "NULL";
+	} elseif (count($dates)==1) {
+		$thisdate=$dates[0];
+		if (strlen($thisdate)==10) {
+			// exact date
+			$datefrom = $thisdate;
+			$dateto = $thisdate;	
+		} elseif (strlen($thisdate)==7) {
+			// month, year
+			$year = substr($thisdate, 0, 4);
+			$month = substr($thisdate, 5, 2);
+			$datefrom = "$year-$month-01";
+			$monthlength=cal_days_in_month(CAL_GREGORIAN, $month, $year);
+			$dateto = "$year-$month-$monthlength";
+		} elseif (strlen($thisdate)==4) {
+			// year
+			$datefrom = "$year-01-01";
+			$dateto = "$year-12-31";
+		}
+	} elseif (count($dates==2) ) {
+		$datesarray = array();
+
+		$firstdate = $dates[0];
+		$seconddate = $dates[1];
+
+		if (strlen($firstdate)==10) {
+			// exact date
+			$datefrom = $firstdate;
+			$dateto = $firstdate;	
+		} elseif (strlen($firstdate)==7) {
+			// month, year
+			$year = substr($firstdate, 0, 4);
+			$month = substr($firstdate, 5, 2);
+			$datefrom = "$year-$month-01";
+			$monthlength=cal_days_in_month(CAL_GREGORIAN, $month, $year);
+			$dateto = "$year-$month-$monthlength";
+		} elseif (strlen($firstdate)==4) {
+			// year
+			$datefrom = "$year-01-01";
+			$dateto = "$year-12-31";
+		}
+		$datesarray[] = $datefrom;
+		$datesarray[] = $dateto;		
+
+		if (strlen($seconddate)==10) {
+			// exact date
+			$datefrom = $seconddate;
+			$dateto = $seconddate;	
+		} elseif (strlen($seconddate)==7) {
+			// month, year
+			$year = substr($seconddate, 0, 4);
+			$month = substr($seconddate, 5, 2);
+			$datefrom = "$year-$month-01";
+			$monthlength=cal_days_in_month(CAL_GREGORIAN, $month, $year);
+			$dateto = "$year-$month-$monthlength";
+		} elseif (strlen($seconddate)==4) {
+			// year
+			$datefrom = "$year-01-01";
+			$dateto = "$year-12-31";
+		}
+		$datesarray[] = $datefrom;
+		$datesarray[] = $dateto;
+
+		$datefrom = min($datesarray);
+		$dateto = max($datesarray);
+	} else die();
+	
+	// from all the dates collected, get first and last
+	// TODO
+	
+	if ($intent== "LOOKUP_HANDLER") {
+		
+		$msg = "This is a list of units/panels that have dealt with that:";
+
+		// TODO - Awful Workaround
+		$company = str_replace(" . ", ".",$company);
+		$company = str_replace(" .", ".",$company);
+
+		$url = "/LOOKUP/HANDLER/$company/$substance/$datefrom/$dateto";
+
+		$request = Request::create($url, 'GET');
+		$response = Route::dispatch($request);
+		$out = json_decode($response->getOriginalContent(),true);
+
+		$myout["message"] = $msg;
+		$myout["handlers"] = $out;
+		$myout["url"] = $url;
+		
+		echo json_encode($myout);
+
+	} elseif ($intent == "LOOKUP_COMPANY") {
+	 	$msg = "This is a list of units/panels that have made questions within these parametres:";
+	} elseif ($intent == "LOOKUP_QUESTION") {
+		$msg = "This is a list of questions that match those features:";
+	} elseif ($intent == "LOOKUP_SUBSTANCE") {
+		$msg = "This is a list of substances that ";
+	} elseif ($intent == "None") {
+		$msg = "Sorry, I am not able to answer that question.";
+	} else {
+		$msg = "There has been an error";
+	}
 
 });
 
