@@ -770,7 +770,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 
 		$myout["message"] = $msg;
 		$myout["handlers"] = $out;
-		$myout["substance"] = array();
+		$myout["substances"] = array();
 		$myout["companies"] = array();
 		$myout["questions"] = array();
 		$myout["url"] = $url;
@@ -789,7 +789,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$myout["message"] = $msg;
 		$myout["companies"] = $out;
 		$myout["handlers"] = array();
-		$myout["substance"] = array();
+		$myout["substances"] = array();
 		$myout["questions"] = array();
 
 		$myout["url"] = $url;
@@ -807,7 +807,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$myout["message"] = $msg;
 		$myout["questions"] = $out;
 		$myout["handlers"] = array();
-		$myout["substance"] = array();
+		$myout["substances"] = array();
 		$myout["companies"] = array();
 		$myout["url"] = $url;
 
