@@ -14,7 +14,7 @@ Route::get('/LOOKUP/HANDLER/{company}/{substance}/{datefrom}/{dateto}', function
 		ON q.QUESTIONNUMBER = m.question_id";
 	$dictvar = [];
 	if ($company != "NULL") {
-		$sql = $sql. " AND q.PETITIONER LIKE :company";
+		$sql = $sql. " AND REPLACE(REPLACE(q.PETITIONER,'.',''),' ','') LIKE :company";
 		$dictvar['company'] = "%$company%";
 	}
 	if ($substance != "NULL") {
@@ -66,7 +66,7 @@ Route::get('/LOOKUP/SUBSTANCE/{handler}/{company}/{datefrom}/{dateto}', function
 		$dictvar['panel'] = "%$handler%";
 	}
 	if ($company != "NULL") {
-		$sql = $sql. " AND q.PETITIONER LIKE :company";
+		$sql = $sql. " AND REPLACE(REPLACE(q.PETITIONER,'.',''),' ','') LIKE :company";
 		$dictvar['company'] = "%$company%";
 	}
 	if (($datefrom != "NULL") && ($dateto != "NULL")) {
@@ -93,7 +93,7 @@ Route::get('/LOOKUP/QUESTION/{company}/{handler}/{substance}/{datefrom}/{dateto}
 		$dictvar['panel'] = "%$handler%";
 	}
 	if ($company != "NULL") {
-		$sql = $sql. " AND q.PETITIONER LIKE :company";
+		$sql = $sql. " AND REPLACE(REPLACE(q.PETITIONER,'.',''),' ','') LIKE :company";
 		$dictvar['company'] = "%$company%";
 	}
 	if ($substance != "NULL") {
@@ -752,16 +752,13 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$dateto = max($datesarray);
 	} else die();
 	
-	// from all the dates collected, get first and last
-	// TODO
 	
-	if ($intent== "LOOKUP_HANDLER") {
-		
-		
+	// TODO - Awful Workaround
+	$company = str_replace(" . ", ".",$company);
+	$company = str_replace(" .", ".",$company);
+	$company = str_replace(" ", "",$company);
 
-		// TODO - Awful Workaround
-		$company = str_replace(" . ", ".",$company);
-		$company = str_replace(" .", ".",$company);
+	if ($intent== "LOOKUP_HANDLER") {
 
 		$url = "/LOOKUP/HANDLER/$company/$substance/$datefrom/$dateto";
 
