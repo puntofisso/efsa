@@ -706,7 +706,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 			$dateto = "$year-$month-$monthlength";
 		} elseif (strlen($firstdate)==4) {
 			// year
-			$year = substr($thisdate, 0, 4);
+			$year = substr($firstdate, 0, 4);
 			$datefrom = "$year-01-01";
 			$dateto = "$year-12-31";
 		}
@@ -726,7 +726,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 			$dateto = "$year-$month-$monthlength";
 		} elseif (strlen($seconddate)==4) {
 			// year
-			$year = substr($thisdate, 0, 4);
+			$year = substr($seconddate, 0, 4);
 			$datefrom = "$year-01-01";
 			$dateto = "$year-12-31";
 		}
