@@ -558,28 +558,7 @@ Route::get('/chat/unity/{convoid}/{text}', function($convoid,$text) {
 		$intent = $json["topScoringIntent"]["intent"];
 		$entities = $json["entities"];
 		
-		$handler = "NULL";
-		$company = "NULL";
-		$substance = "NULL";
-
-		$dates = array();
-		foreach ($entities as $entity) {
-			$ent_type = $entity["type"];
-			$ent_value = $entity["entity"];
-
-			if ($ent_type == "handler") {
-				$handler = $ent_value;
-			}
-			if ($ent_type == "substance") {
-				$substance = $ent_value;
-			}
-			if ($ent_type == "company") {
-				$company = $ent_value;
-			}
-			if ($ent_type == "builtin.datetime.date") {
-				$dates[] = $entity["resolution"]["date"];
-			}
-		}
+		// TODO
 
 		if ($intent== "LOOKUP_HANDLER") {
 			$url = "/chat/aiml/$convoid/UNITPANEL SET $handler";
@@ -642,6 +621,8 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 	$mytext=urlencode($text);
 	$url = "$url&q=$mytext";
 
+
+
 	$client = new GuzzleHttp\Client();
     $chatbot = $client->get($url);
     $code = $chatbot->getStatusCode();
@@ -657,6 +638,8 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 	$company = "NULL";
 	$substance = "NULL";
 	$dates = array();
+
+
 
 	foreach ($entities as $entity) {
 		$ent_type = $entity["type"];
@@ -678,6 +661,8 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 
 	$datefrom = "";
 	$dateto = "";
+
+
 
 	if (count($dates)==0) {
 		// all dates null
@@ -750,13 +735,17 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 
 		$datefrom = min($datesarray);
 		$dateto = max($datesarray);
-	} else die();
+	} 
+
+
 	
 	
 	// TODO - Awful Workaround
 	$company = str_replace(" . ", ".",$company);
 	$company = str_replace(" .", ".",$company);
 	$company = str_replace(" ", "",$company);
+
+
 
 	if ($intent== "LOOKUP_HANDLER") {
 
@@ -840,8 +829,26 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 
 	} elseif ($intent == "None") {
 		$msg = "Sorry, I am not able to answer that question.";
+		$myout["original"] = $text;
+		$myout["query"] = $mytext;
+		$myout["message"] = $msg;
+		$myout["substances"] = array();
+		$myout["questions"] = array();
+		$myout["handlers"] = array();
+		$myout["companies"] = array();
+		$myout["url"] = $url;
+		echo json_encode($myout);
 	} else {
 		$msg = "There has been an error";
+		$myout["original"] = $text;
+		$myout["query"] = $mytext;
+		$myout["message"] = $msg;
+		$myout["substances"] = array();
+		$myout["questions"] = array();
+		$myout["handlers"] = array();
+		$myout["companies"] = array();
+		$myout["url"] = $url;
+		echo json_encode($myout);
 	}
 
 });
