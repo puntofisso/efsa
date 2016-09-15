@@ -756,7 +756,11 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$response = Route::dispatch($request);
 		$out = json_decode($response->getOriginalContent(),true);
 
-		$msg = "I have found units/panels that have dealt with that:";
+		if (count($out) == 0) {
+			$msg = "Sorry, no unit or panel dealt with the questions specified.";
+		} else {
+		 	$msg = "I have found some records of units and panels taht dealt with the questions specified:";
+		}
 
 		$myout["original"] = $text;
 		$myout["query"] = $mytext;
@@ -770,13 +774,19 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		echo json_encode($myout);
 
 	} elseif ($intent == "LOOKUP_COMPANY") {
-	 	$msg = "This is a list of companies that have asked questions within these parametres:";
 
 		$url = "/LOOKUP/COMPANY/$handler/$substance/$datefrom/$dateto";
 
 		$request = Request::create($url, 'GET');
 		$response = Route::dispatch($request);
 		$out = json_decode($response->getOriginalContent(),true);
+
+		if (count($out) == 0) {
+			$msg = "Sorry, no companies asked questions matching those parametres";
+		} else {
+		 	$msg = "This is a list of companies that have asked questions within these parametres:";
+		}
+
 
 		$myout["original"] = $text;
 		$myout["query"] = $mytext;
@@ -790,13 +800,19 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 
 		echo json_encode($myout);
 	} elseif ($intent == "LOOKUP_QUESTION") {
-		$msg = "This is a list of questions that match those features:";
 
 		$url = "/LOOKUP/QUESTION/$company/$handler/$substance/$datefrom/$dateto";
 
 		$request = Request::create($url, 'GET');
 		$response = Route::dispatch($request);
 		$out = json_decode($response->getOriginalContent(),true);
+
+		if (count($out) == 0) {
+			$msg = "Sorry, I cannot find any question matching those parametres.";
+		} else {
+		 	$msg = "This is a list of questions in my database that correspond to your query:";
+		}
+
 
 		$myout["original"] = $text;
 		$myout["query"] = $mytext;
@@ -809,13 +825,18 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 
 		echo json_encode($myout);
 	} elseif ($intent == "LOOKUP_SUBSTANCE") {
-		$msg = "This is a list of substances that correspond to these requests:";
 
 		$url = "/LOOKUP/SUBSTANCE/$handler/$company/$datefrom/$dateto";
 
 		$request = Request::create($url, 'GET');
 		$response = Route::dispatch($request);
 		$out = json_decode($response->getOriginalContent(),true);
+
+		if (count($out) == 0) {
+			$msg = "Sorry, I have no record of substances within those parametres.";
+		} else {
+		 	$msg = "This is a list of substances that were object of questions within these parametres:";
+		}
 
 		$myout["original"] = $text;
 		$myout["query"] = $mytext;
