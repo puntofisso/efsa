@@ -26,7 +26,7 @@ Route::get('/LOOKUP/HANDLER/{company}/{substance}/{datefrom}/{dateto}', function
 		$dictvar['datefrom'] = $datefrom;	
 		$dictvar['dateto'] = $dateto;	
 	}
-
+	$sql = $sql." LIMIT 100";
 	$query=DB::select($sql, $dictvar);
 	return json_encode($query);
 });
@@ -50,7 +50,7 @@ Route::get('/LOOKUP/COMPANY/{handler}/{substance}/{datefrom}/{dateto}', function
 		$dictvar['datefrom'] = $datefrom;	
 		$dictvar['dateto'] = $dateto;	
 	}
-
+	$sql = $sql." LIMIT 100";
 	$query=DB::select($sql, $dictvar);
 	return json_encode($query);
 });
@@ -75,7 +75,7 @@ Route::get('/LOOKUP/SUBSTANCE/{handler}/{company}/{datefrom}/{dateto}', function
 		$dictvar['dateto'] = $dateto;	
 	}
 	$sql = $sql. " ORDER BY m.score DESC";
-
+	$sql = $sql." LIMIT 100";
 	$query=DB::select($sql, $dictvar);
 	return json_encode($query);
 });
@@ -106,7 +106,7 @@ Route::get('/LOOKUP/QUESTION/{company}/{handler}/{substance}/{datefrom}/{dateto}
 		$dictvar['dateto'] = $dateto;	
 	}
 	$sql = $sql." ORDER BY RECEPTIONDATE ASC";
-
+	$sql = $sql." LIMIT 100";
 	$query=DB::select($sql, $dictvar);
 	return json_encode($query);
 });
@@ -740,9 +740,10 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 
 	
 	
-	// TODO - Awful Workaround
+	
 	$company = str_replace(" . ", ".",$company);
 	$company = str_replace(" .", ".",$company);
+	$company = str_replace(".", "",$company);
 	$company = str_replace(" ", "",$company);
 
 
