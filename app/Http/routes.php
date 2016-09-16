@@ -51,6 +51,7 @@ Route::get('/LOOKUP/COMPANY/{handler}/{substance}/{datefrom}/{dateto}', function
 		$dictvar['dateto'] = $dateto;	
 	}
 	$sql = $sql." LIMIT 100";
+	
 	$query=DB::select($sql, $dictvar);
 	return json_encode($query);
 });
@@ -620,6 +621,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 	} else die();
 	$mytext=urlencode($text);
 	$url = "$url&q=$mytext";
+
 
 
 
