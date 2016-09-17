@@ -85,7 +85,7 @@ Route::get('/LOOKUP/SUBSTANCE/{handler}/{company}/{datefrom}/{dateto}', function
 ///LOOKUP/QUESTION/$company/$handler/$substance/$datefrom/$dateto
 Route::get('/LOOKUP/QUESTION/{company}/{handler}/{substance}/{datefrom}/{dateto}', function($company, $handler, $substance, $datefrom, $dateto) {
 
-	$sql="SELECT DISTINCT q.QUESTIONNUMBER, q.RECEPTIONDATE FROM Questions q INNER JOIN questions_metas m
+	$sql="SELECT DISTINCT q.QUESTIONNUMBER, q.RECEPTIONDATE, q.SUBJECT FROM Questions q INNER JOIN questions_metas m
 		ON q.QUESTIONNUMBER = m.question_id";
 	$dictvar = [];
 	if ($handler != "NULL") {
@@ -761,7 +761,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		if (count($out) == 0) {
 			$msg = "Sorry, no unit or panel dealt with the questions specified.";
 		} else {
-		 	$msg = "I have found some records of units and panels taht dealt with the questions specified:";
+		 	$msg = "I have found some records of units and panels that dealt with the questions specified:";
 		}
 
 		$myout["original"] = $text;
