@@ -76,8 +76,9 @@ Route::get('/LOOKUP/SUBSTANCE/{handler}/{company}/{datefrom}/{dateto}', function
 		$dictvar['dateto'] = $dateto;	
 	}
 	$sql = $sql. " ORDER BY m.score DESC";
-	$sql = $sql." LIMIT 100";
+	//$sql = $sql." LIMIT 100";
 	$query=DB::select($sql, $dictvar);
+
 	return json_encode($query);
 });
 
