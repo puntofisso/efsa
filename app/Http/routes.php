@@ -785,9 +785,9 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$out = json_decode($response->getOriginalContent(),true);
 
 		if (count($out) == 0) {
-			$msg = "Sorry, no companies asked questions matching those parametres";
+			$msg = "Sorry, no companies asked questions matching those parameters";
 		} else {
-		 	$msg = "This is a list of companies that have asked questions within these parametres:";
+		 	$msg = "This is a list of companies that have asked questions within these parameters:";
 		}
 
 
@@ -811,7 +811,7 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$out = json_decode($response->getOriginalContent(),true);
 
 		if (count($out) == 0) {
-			$msg = "Sorry, I cannot find any question matching those parametres.";
+			$msg = "Sorry, I cannot find any question matching those parameters.";
 		} else {
 		 	$msg = "This is a list of questions in my database that correspond to your query:";
 		}
@@ -836,9 +836,9 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$out = json_decode($response->getOriginalContent(),true);
 
 		if (count($out) == 0) {
-			$msg = "Sorry, I have no record of substances within those parametres.";
+			$msg = "Sorry, I have no record of substances within those parameters.";
 		} else {
-		 	$msg = "This is a list of substances that were object of questions within these parametres:";
+		 	$msg = "This is a list of substances that were object of questions within these parameters:";
 		}
 
 		$myout["original"] = $text;
