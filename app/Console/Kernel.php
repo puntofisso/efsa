@@ -33,7 +33,7 @@ class Kernel extends ConsoleKernel
             $toupdate = array();
 
             // 1. navigate favourites lists
-            $favourites = DB::select('SELECT f.*, u.email FROM Favourites f, Users u WHERE f.user_id = u.id');
+            $favourites = DB::select('SELECT f.*, u.email FROM favourites f, Users u WHERE f.user_id = u.id');
             
             foreach ($favourites as $fav) {
             $send = false;
@@ -120,7 +120,7 @@ class Kernel extends ConsoleKernel
                 $user_id = $thisupdate['user_id'];
                 $fav_identifier = $thisupdate['fav_identifier'];
                 
-                $aff = DB::update('update Favourites set lastupdate = :now where user_id = :user_id AND fav_identifier = :fav_identifier', ['now' => $now, 'user_id' => $user_id, 'fav_identifier' => $fav_identifier]);
+                $aff = DB::update('update favourites set lastupdate = :now where user_id = :user_id AND fav_identifier = :fav_identifier', ['now' => $now, 'user_id' => $user_id, 'fav_identifier' => $fav_identifier]);
 
                 print_r($aff);
             }
