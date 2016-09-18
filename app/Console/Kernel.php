@@ -33,7 +33,7 @@ class Kernel extends ConsoleKernel
             $toupdate = array();
 
             // 1. navigate favourites lists
-            $favourites = DB::select('SELECT f.*, u.email FROM favourites f, Users u WHERE f.user_id = u.id');
+            $favourites = DB::select('SELECT f.*, u.email FROM efsa.favourites f, efsa.Users u WHERE f.user_id = u.id');
             
             foreach ($favourites as $fav) {
             $send = false;
