@@ -749,6 +749,8 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 	$company = str_replace(".", "",$company);
 	$company = str_replace(" ", "",$company);
 
+	$msg = "";
+	$url = "";
 
 
 	if ($intent== "LOOKUP_HANDLER") {
@@ -875,6 +877,21 @@ Route::get('/chat/luis/parse/{previeworproduction}/{text}', function($previeworp
 		$myout["url"] = $url;
 		echo json_encode($myout);
 	}
+
+	$textD = urldecode($text);
+	$user = Auth::user();
+	$user_id = '-1';
+
+
+	if ($user)
+  		$user_id=$user->id;
+
+	$log = new Logs;
+	$log->user_id = $user_id;
+	$log->usertext = $mytext;
+	$log->bottext = $url;
+	$log->convo_id = 'LUIS';    
+	$log->save();
 
 });
 
